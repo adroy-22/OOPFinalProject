@@ -24,8 +24,32 @@ class Ticket:
     self.is_open = is_open
     self.created_by: Optional[User] = None
     self.assigned_to: Optional[User] = None
-  
+
+    self._validate()
+
+  def _validate(self):
+    if not self.title:
+      raise ValueError("Title cannot be empty")
+    if not self.description:
+      raise ValueError("Description cannot be empty")
+    if not self.org_id:
+      raise ValueError("Organization ID cannot be empty")
+      
   def update_status(self, new_status: Status):
     self.status = new_status
     self.updated_at = datetime.now()
+
+  def to_dict(self):
+    return {
+    "ticket_id": self.ticket_id,
+    "title": self.title,
+    "description": self.description,
+    "status": self.status.value,
+    "priority": self.priority.value,
+    "created_at": self.created_at.isoformat(),
+    "updated_at": self.updated_at.isoformat(),
+    "is_open": self.is_open,
+    "org_id": self.org_id,
+    "assignee_id": self.assignee_id
+    }
     
