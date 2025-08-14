@@ -35,10 +35,6 @@ class Ticket:
       raise ValueError("Description cannot be empty")
     if not self.org_id:
       raise ValueError("Organization ID cannot be empty")
-      
-  def update_status(self, new_status: Status):
-    self.status = new_status
-    self.updated_at = datetime.now()
 
   def to_dict(self):
     return {
