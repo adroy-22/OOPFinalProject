@@ -19,13 +19,13 @@ class TicketService:
     )
     return self.repository.save(ticket)
   
-  def get_ticket(self, ticket_id: str) -> Optional[Ticket]:
+  def get_ticket(self, ticket_id: int) -> Optional[Ticket]:
     return self.repository.find_by_id(ticket_id)
   
   def list_tickets(self, filters: Optional[Dict[str, Any]] = None) -> List[Ticket]:
     return self.repository.find_by_filters(filters)
   
-  def update_ticket(self, ticket_id: str, update_data: Dict[str, Any]) -> Optional[Ticket]:
+  def update_ticket(self, ticket_id: int, update_data: Dict[str, Any]) -> Optional[Ticket]:
     ticket = self.repository.find_by_id(ticket_id)
     if not ticket:
       return None
@@ -46,11 +46,13 @@ class TicketService:
     ticket.updated_at = datetime.now()
     return self.repository.save(ticket)
   
-  def change_status(self, ticket_id: str, new_status: Status) -> Optional[Ticket]:
+  def change_status(self, ticket_id: int, new_status: Status, current_user_id: int) -> Optional[Ticket]:
     ticket = self.repository.find_by_id(ticket_id)
     if not ticket:
       return None
-      
+
+    if ticket.assignee_id != current_user_id:
+      return None
     ticket.status = new_status
     ticket.updated_at = datetime.now()
     return self.repository.save(ticket)
