@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from .enums import Status, Priority
+from .user import User
 
 class Ticket:
   def __init__(
