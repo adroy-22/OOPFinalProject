@@ -25,3 +25,7 @@ class Ticket:
     self.created_by: Optional[User] = None
     self.assigned_to: Optional[User] = None
   
+  def update_status(self, new_status: Status):
+    self.status = new_status
+    self.updated_at = datetime.now()
+    
