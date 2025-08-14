@@ -13,7 +13,6 @@ class TicketService:
       ticket_id=ticket_id,
       title=ticket_data['title'],
       description=ticket_data.get('description', ''),
-      org_id=ticket_data['org_id'],
       status=Status(ticket_data.get('status', Status.TODO)),
       priority=Priority(ticket_data.get('priority', Priority.MEDIUM)),
       assignee_id=ticket_data.get('assignee_id')
@@ -23,8 +22,8 @@ class TicketService:
   def get_ticket(self, ticket_id: str) -> Optional[Ticket]:
     return self.repository.find_by_id(ticket_id)
   
-  def list_tickets(self, org_id: str, filters: Optional[Dict[str, Any]] = None) -> List[Ticket]:
-    return self.repository.find_by_org(org_id, filters)
+  def list_tickets(self, filters: Optional[Dict[str, Any]] = None) -> List[Ticket]:
+    return self.repository.find_by_filters(filters)
   
   def update_ticket(self, ticket_id: str, update_data: Dict[str, Any]) -> Optional[Ticket]:
     ticket = self.repository.find_by_id(ticket_id)
@@ -55,6 +54,3 @@ class TicketService:
     ticket.status = new_status
     ticket.updated_at = datetime.now()
     return self.repository.save(ticket)
-  
-  def delete_ticket(self, ticket_id: str) -> bool:
-    return self.repository.delete(ticket_id)
