@@ -12,7 +12,3 @@ class Priority(Enum):
     MEDIUM = "Medium"
     HIGH = "High"
     CRITICAL = "Critical"
-
-class Role(Enum):
-    MEMBER = "Member"
-    ADMIN = "Admin"
