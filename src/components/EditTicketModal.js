@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { Status, Priority } from '../classes/Enums';
+import User from '../classes/User';
 
-const EditTicketModal = ({ ticket, onClose, onSaveTicket }) => {
+const EditTicketModal = ({ ticket, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    status: 'ToDo',
-    priority: 'Medium',
-    created_by: {
-      user_id: '',
+    priority: Priority.Medium,
+    status: Status.ToDo,
+    createdBy: {
       name: '',
       email: ''
     },
-    assigned_to: {
-      user_id: '',
+    assignedTo: {
       name: '',
       email: ''
     }
@@ -20,21 +20,18 @@ const EditTicketModal = ({ ticket, onClose, onSaveTicket }) => {
 
   const [errors, setErrors] = useState({});
 
-  // Initialize form data when ticket changes
   useEffect(() => {
     if (ticket) {
       setFormData({
         title: ticket.title || '',
         description: ticket.description || '',
-        status: ticket.status || 'ToDo',
-        priority: ticket.priority || 'Medium',
-        created_by: {
-          user_id: ticket.created_by?.user_id || '',
+        priority: ticket.priority || Priority.Medium,
+        status: ticket.status || Status.ToDo,
+        createdBy: {
           name: ticket.created_by?.name || '',
           email: ticket.created_by?.email || ''
         },
-        assigned_to: {
-          user_id: ticket.assigned_to?.user_id || '',
+        assignedTo: {
           name: ticket.assigned_to?.name || '',
           email: ticket.assigned_to?.email || ''
         }
@@ -42,9 +39,11 @@ const EditTicketModal = ({ ticket, onClose, onSaveTicket }) => {
     }
   }, [ticket]);
 
-  const handleInputChange = (field, value) => {
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.');
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
       setFormData(prev => ({
         ...prev,
         [parent]: {
@@ -55,15 +54,14 @@ const EditTicketModal = ({ ticket, onClose, onSaveTicket }) => {
     } else {
       setFormData(prev => ({
         ...prev,
-        [field]: value
+        [name]: value
       }));
     }
     
-    // Clear error when user starts typing
-    if (errors[field]) {
+    if (errors[name]) {
       setErrors(prev => ({
         ...prev,
-        [field]: ''
+        [name]: ''
       }));
     }
   };
@@ -78,23 +76,23 @@ const EditTicketModal = ({ ticket, onClose, onSaveTicket }) => {
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
     }
-    
-    if (!formData.created_by.name.trim()) {
-      newErrors['created_by.name'] = 'Creator name is required';
+
+    if (!formData.createdBy.name.trim()) {
+      newErrors['createdBy.name'] = 'Creator name is required';
     }
-    
-    if (!formData.created_by.email.trim()) {
-      newErrors['created_by.email'] = 'Creator email is required';
-    } else if (!formData.created_by.email.includes('@')) {
-      newErrors['created_by.email'] = 'Invalid email format';
+
+    if (!formData.createdBy.email.trim()) {
+      newErrors['createdBy.email'] = 'Creator email is required';
+    } else if (!formData.createdBy.email.includes('@')) {
+      newErrors['createdBy.email'] = 'Invalid email format';
     }
-    
-    if (formData.assigned_to.name.trim() && !formData.assigned_to.email.trim()) {
-      newErrors['assigned_to.email'] = 'Assignee email is required when name is provided';
+
+    if (formData.assignedTo.name.trim() && !formData.assignedTo.email.trim()) {
+      newErrors['assignedTo.email'] = 'Assignee email is required when name is provided';
     }
-    
-    if (formData.assigned_to.email.trim() && !formData.assigned_to.email.includes('@')) {
-      newErrors['assigned_to.email'] = 'Invalid email format';
+
+    if (formData.assignedTo.email.trim() && !formData.assignedTo.email.includes('@')) {
+      newErrors['assignedTo.email'] = 'Invalid email format';
     }
     
     setErrors(newErrors);
@@ -105,113 +103,137 @@ const EditTicketModal = ({ ticket, onClose, onSaveTicket }) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Preserve the original ticket ID and timestamps
-      const updatedTicket = {
-        ...ticket,
-        ...formData,
-        updated_at: new Date().toISOString()
-      };
-      
-      onSaveTicket(updatedTicket);
-    }
-  };
+      const createdByUser = new User(
+        ticket.created_by?.user_id || `user_${Date.now()}_1`,
+        formData.createdBy.name,
+        formData.createdBy.email
+      );
 
-  const handleCancel = () => {
-    onClose();
+      let assignedToUser = null;
+      if (formData.assignedTo.name.trim() && formData.assignedTo.email.trim()) {
+        assignedToUser = new User(
+          ticket.assigned_to?.user_id || `user_${Date.now()}_2`,
+          formData.assignedTo.name,
+          formData.assignedTo.email
+        );
+      }
+
+      const updates = {
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        status: formData.status,
+        createdBy: createdByUser,
+        assignedTo: assignedToUser
+      };
+
+      onSave(ticket.ticket_id, updates);
+      onClose();
+    }
   };
 
   if (!ticket) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Edit Ticket #{ticket.ticket_id}</h2>
-          <button className="close-btn" onClick={onClose}>
+          <h2>Edit Ticket: {ticket.title}</h2>
+          <button className="modal-close" onClick={onClose}>
             ×
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="modal-content">
+        <form onSubmit={handleSubmit} className="modal-body">
           <div className="form-group">
-            <label htmlFor="edit-title">Title *</label>
+            <label htmlFor="title">Title *</label>
             <input
               type="text"
-              id="edit-title"
+              id="title"
+              name="title"
               value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              placeholder="Enter ticket title"
+              onChange={handleInputChange}
               className={errors.title ? 'error' : ''}
+              placeholder="Enter ticket title"
             />
-            {errors.title && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.title}</span>}
+            {errors.title && <span className="error-message">{errors.title}</span>}
           </div>
           
           <div className="form-group">
-            <label htmlFor="edit-description">Description *</label>
+            <label htmlFor="description">Description *</label>
             <textarea
-              id="edit-description"
+              id="description"
+              name="description"
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Enter ticket description"
+              onChange={handleInputChange}
               className={errors.description ? 'error' : ''}
+              placeholder="Enter ticket description"
+              rows="4"
             />
-            {errors.description && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.description}</span>}
+            {errors.description && <span className="error-message">{errors.description}</span>}
           </div>
           
           <div className="form-group">
-            <label htmlFor="edit-status">Status</label>
+            <label htmlFor="priority">Priority</label>
             <select
-              id="edit-status"
-              value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value)}
-            >
-              <option value="ToDo">To Do</option>
-              <option value="InProgress">In Progress</option>
-              <option value="Done">Done</option>
-            </select>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="edit-priority">Priority</label>
-            <select
-              id="edit-priority"
+              id="priority"
+              name="priority"
               value={formData.priority}
-              onChange={(e) => handleInputChange('priority', e.target.value)}
+              onChange={handleInputChange}
             >
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Critical">Critical</option>
+              {Object.values(Priority).map(priority => (
+                <option key={priority} value={priority}>
+                  {priority}
+                </option>
+              ))}
             </select>
           </div>
           
+          <div className="form-group">
+            <label htmlFor="status">Status</label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleInputChange}
+            >
+              {Object.values(Status).map(status => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div style={{ borderTop: '1px solid #dee2e6', paddingTop: '1rem', marginTop: '1rem' }}>
             <h3 style={{ marginBottom: '1rem', color: '#495057' }}>Created By *</h3>
             
             <div className="form-group">
-              <label htmlFor="edit-creator-name">Name *</label>
+              <label htmlFor="creator-name">Name *</label>
               <input
                 type="text"
-                id="edit-creator-name"
-                value={formData.created_by.name}
-                onChange={(e) => handleInputChange('created_by.name', e.target.value)}
+                id="creator-name"
+                name="createdBy.name"
+                value={formData.createdBy.name}
+                onChange={handleInputChange}
                 placeholder="Enter creator name"
-                className={errors['created_by.name'] ? 'error' : ''}
+                className={errors['createdBy.name'] ? 'error' : ''}
               />
-              {errors['created_by.name'] && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors['created_by.name']}</span>}
+              {errors['createdBy.name'] && <span className="error-message">{errors['createdBy.name']}</span>}
             </div>
             
             <div className="form-group">
-              <label htmlFor="edit-creator-email">Email *</label>
+              <label htmlFor="creator-email">Email *</label>
               <input
                 type="email"
-                id="edit-creator-email"
-                value={formData.created_by.email}
-                onChange={(e) => handleInputChange('created_by.email', e.target.value)}
+                id="creator-email"
+                name="createdBy.email"
+                value={formData.createdBy.email}
+                onChange={handleInputChange}
                 placeholder="Enter creator email"
-                className={errors['created_by.email'] ? 'error' : ''}
+                className={errors['createdBy.email'] ? 'error' : ''}
               />
-              {errors['created_by.email'] && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors['created_by.email']}</span>}
+              {errors['createdBy.email'] && <span className="error-message">{errors['createdBy.email']}</span>}
             </div>
           </div>
           
@@ -219,35 +241,37 @@ const EditTicketModal = ({ ticket, onClose, onSaveTicket }) => {
             <h3 style={{ marginBottom: '1rem', color: '#495057' }}>Assigned To (Optional)</h3>
             
             <div className="form-group">
-              <label htmlFor="edit-assignee-name">Name</label>
+              <label htmlFor="assignee-name">Name</label>
               <input
                 type="text"
-                id="edit-assignee-name"
-                value={formData.assigned_to.name}
-                onChange={(e) => handleInputChange('assigned_to.name', e.target.value)}
+                id="assignee-name"
+                name="assignedTo.name"
+                value={formData.assignedTo.name}
+                onChange={handleInputChange}
                 placeholder="Enter assignee name"
               />
             </div>
             
             <div className="form-group">
-              <label htmlFor="edit-assignee-email">Email</label>
+              <label htmlFor="assignee-email">Email</label>
               <input
                 type="email"
-                id="edit-assignee-email"
-                value={formData.assigned_to.email}
-                onChange={(e) => handleInputChange('assigned_to.email', e.target.value)}
+                id="assignee-email"
+                name="assignedTo.email"
+                value={formData.assignedTo.email}
+                onChange={handleInputChange}
                 placeholder="Enter assignee email"
-                className={errors['assigned_to.email'] ? 'error' : ''}
+                className={errors['assignedTo.email'] ? 'error' : ''}
               />
-              {errors['assigned_to.email'] && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors['assigned_to.email']}</span>}
+              {errors['assignedTo.email'] && <span className="error-message">{errors['assignedTo.email']}</span>}
             </div>
           </div>
           
-          <div className="form-actions">
-            <button type="button" className="btn btn-secondary" onClick={handleCancel}>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="btn">
+            <button type="submit" className="btn btn-primary">
               Save Changes
             </button>
           </div>

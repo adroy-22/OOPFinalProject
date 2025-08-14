@@ -10,146 +10,260 @@ function App() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingTicket, setEditingTicket] = useState(null);
-  const [nextTicketId, setNextTicketId] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [ticketRepository, setTicketRepository] = useState(null);
+  const [ticketService, setTicketService] = useState(null);
+  const [initializationError, setInitializationError] = useState(null);
+  const [useOOP, setUseOOP] = useState(false);
 
-  // Sample data to populate the tickets
   useEffect(() => {
-    const sampleTickets = [
-      {
-        ticket_id: 1,
-        title: "Fix login authentication bug",
-        description: "Users are unable to log in with valid credentials. The authentication service is returning 500 errors.",
-        status: "ToDo",
-        priority: "High",
-        created_at: "2024-01-15T10:30:00Z",
-        updated_at: "2024-01-15T10:30:00Z",
-        is_open: true,
-        created_by: { user_id: "user1", name: "John Doe", email: "john@example.com" },
-        assigned_to: { user_id: "user2", name: "Jane Smith", email: "jane@example.com" }
-      },
-      {
-        ticket_id: 2,
-        title: "Update user profile page",
-        description: "The user profile page needs to be redesigned to match the new design system. Include avatar upload functionality.",
-        status: "InProgress",
-        priority: "Medium",
-        created_at: "2024-01-14T14:20:00Z",
-        updated_at: "2024-01-15T09:15:00Z",
-        is_open: true,
-        created_by: { user_id: "user3", name: "Mike Johnson", email: "mike@example.com" },
-        assigned_to: { user_id: "user4", name: "Sarah Wilson", email: "sarah@example.com" }
-      },
-      {
-        ticket_id: 3,
-        title: "Database performance optimization",
-        description: "The database queries are running slowly. Need to optimize indexes and query performance for better response times.",
-        status: "ToDo",
-        priority: "Critical",
-        created_at: "2024-01-13T16:45:00Z",
-        updated_at: "2024-01-13T16:45:00Z",
-        is_open: true,
-        created_by: { user_id: "user1", name: "John Doe", email: "john@example.com" },
-        assigned_to: { user_id: "user5", name: "David Brown", email: "david@example.com" }
-      },
-      {
-        ticket_id: 4,
-        title: "Add email notifications",
-        description: "Implement email notifications for ticket updates, status changes, and new assignments.",
-        status: "Done",
-        priority: "Low",
-        created_at: "2024-01-10T11:00:00Z",
-        updated_at: "2024-01-12T15:30:00Z",
-        is_open: false,
-        created_by: { user_id: "user2", name: "Jane Smith", email: "jane@example.com" },
-        assigned_to: { user_id: "user6", name: "Lisa Davis", email: "lisa@example.com" }
+    const initializeOOP = async () => {
+      try {
+        console.log('Initializing OOP components...');
+        
+        const { default: TicketRepository } = await import('./classes/TicketRepository');
+        const { default: TicketService } = await import('./classes/TicketService');
+        
+        console.log('Classes imported successfully');
+        
+        const repository = new TicketRepository();
+        const service = new TicketService(repository);
+        
+        console.log('Repository and Service instantiated');
+        
+        setTicketRepository(repository);
+        setTicketService(service);
+        setUseOOP(true);
+        setInitializationError(null);
+        
+        console.log('OOP initialization complete');
+      } catch (error) {
+        console.error('OOP initialization failed:', error);
+        setInitializationError(error.message);
+        setUseOOP(false);
       }
-    ];
-    setTickets(sampleTickets);
-    setNextTicketId(sampleTickets.length + 1);
+    };
+
+    initializeOOP();
   }, []);
 
+  useEffect(() => {
+    if (ticketService) {
+      loadTickets();
+    }
+  }, [ticketService]);
+
+  const loadTickets = () => {
+    try {
+      console.log('Loading tickets...');
+      setLoading(true);
+      setError(null);
+      
+      const allTickets = ticketService.getAllTickets();
+      const ticketObjects = allTickets.map(ticket => ticket.toDict());
+      
+      console.log('Tickets loaded:', ticketObjects.length);
+      setTickets(ticketObjects);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to load tickets:', error);
+      setError('Failed to load tickets: ' + error.message);
+      setLoading(false);
+    }
+  };
+
   const handleTicketClick = (ticket) => {
+    console.log('Ticket clicked:', ticket);
     setSelectedTicket(ticket);
   };
 
   const handleCloseModal = () => {
+    console.log('Closing ticket modal');
     setSelectedTicket(null);
   };
 
-  const handleCreateTicket = (ticketData) => {
-    const newTicket = {
-      ...ticketData,
-      ticket_id: nextTicketId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_open: true
-    };
-    
-    setTickets([...tickets, newTicket]);
-    setNextTicketId(nextTicketId + 1);
-    setShowCreateModal(false);
+  const handleCreateTicket = () => {
+    console.log('Opening create ticket modal');
+    setShowCreateModal(true);
   };
 
   const handleCloseCreateModal = () => {
+    console.log('Closing create ticket modal');
     setShowCreateModal(false);
   };
 
+  const handleCreateTicketSubmit = (ticketData) => {
+    try {
+      console.log('Creating ticket with data:', ticketData);
+      
+      const newTicket = ticketService.createTicket(
+        ticketData.title,
+        ticketData.description,
+        ticketData.priority,
+        ticketData.createdBy,
+        ticketData.assignedTo
+      );
+      
+      console.log('Ticket created:', newTicket);
+      loadTickets();
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error('Failed to create ticket:', error);
+      alert('Failed to create ticket: ' + error.message);
+    }
+  };
+
   const handleEditTicket = (ticket) => {
+    console.log('Opening edit modal for ticket:', ticket);
     setEditingTicket(ticket);
   };
 
   const handleCloseEditModal = () => {
+    console.log('Closing edit modal');
     setEditingTicket(null);
   };
 
-  const handleSaveTicket = (updatedTicket) => {
-    setTickets(prevTickets => 
-      prevTickets.map(ticket => 
-        ticket.ticket_id === updatedTicket.ticket_id ? updatedTicket : ticket
-      )
-    );
-    setEditingTicket(null);
+  const handleSaveTicket = (ticketId, updates) => {
+    try {
+      console.log('Saving ticket updates:', { ticketId, updates });
+      
+      const updatedTicket = ticketService.updateTicket(ticketId, updates);
+      console.log('Ticket updated:', updatedTicket);
+      
+      loadTickets();
+      setEditingTicket(null);
+    } catch (error) {
+      console.error('Failed to update ticket:', error);
+      alert('Failed to update ticket: ' + error.message);
+    }
   };
+
+  if (initializationError) {
+    return (
+      <div className="App">
+        <div className="header">
+          <div className="container">
+            <h1>🎫 Ticketing System</h1>
+            <p>Initialization Error</p>
+          </div>
+        </div>
+        <div className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <h2>❌ OOP Initialization Failed</h2>
+            <p style={{ color: '#dc3545', marginTop: '1rem' }}>
+              Error: {initializationError}
+            </p>
+            <button className="btn" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!ticketService) {
+    return (
+      <div className="App">
+        <div className="header">
+          <div className="container">
+            <h1>🎫 Ticketing System</h1>
+            <p>Loading OOP Components...</p>
+          </div>
+        </div>
+        <div className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <h2>⏳ Initializing...</h2>
+            <p>Setting up Object-Oriented Programming components...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="App">
+        <div className="header">
+          <div className="container">
+            <h1>🎫 Ticketing System</h1>
+            <p>Loading Tickets...</p>
+          </div>
+        </div>
+        <div className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <h2>⏳ Loading...</h2>
+            <p>Fetching tickets from the system...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="App">
+        <div className="header">
+          <div className="container">
+            <h1>🎫 Ticketing System</h1>
+            <p>Error Loading Tickets</p>
+          </div>
+        </div>
+        <div className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <h2>❌ Error</h2>
+            <p style={{ color: '#dc3545', marginTop: '1rem' }}>
+              {error}
+            </p>
+            <button className="btn" onClick={loadTickets}>
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">
       <div className="header">
         <div className="container">
           <h1>🎫 Ticketing System</h1>
-          <p>Manage and track your project tickets efficiently</p>
+          <p>Object-Oriented Programming Demo</p>
         </div>
       </div>
-
+      
       <div className="container">
-        <TicketList 
-          tickets={tickets} 
+        <TicketList
+          tickets={tickets}
           onTicketClick={handleTicketClick}
-          onCreateTicket={() => setShowCreateModal(true)}
+          onCreateTicket={handleCreateTicket}
           onEditTicket={handleEditTicket}
         />
-
-        {selectedTicket && (
-          <TicketModal 
-            ticket={selectedTicket} 
-            onClose={handleCloseModal} 
-          />
-        )}
-
-        {showCreateModal && (
-          <CreateTicketModal 
-            onClose={handleCloseCreateModal}
-            onCreateTicket={handleCreateTicket}
-          />
-        )}
-
-        {editingTicket && (
-          <EditTicketModal 
-            ticket={editingTicket}
-            onClose={handleCloseEditModal}
-            onSaveTicket={handleSaveTicket}
-          />
-        )}
       </div>
+
+      {selectedTicket && (
+        <TicketModal
+          ticket={selectedTicket}
+          onClose={handleCloseModal}
+        />
+      )}
+
+      {showCreateModal && (
+        <CreateTicketModal
+          onClose={handleCloseCreateModal}
+          onCreateTicket={handleCreateTicketSubmit}
+        />
+      )}
+
+      {editingTicket && (
+        <EditTicketModal
+          ticket={editingTicket}
+          onClose={handleCloseEditModal}
+          onSave={handleSaveTicket}
+        />
+      )}
     </div>
   );
 }
