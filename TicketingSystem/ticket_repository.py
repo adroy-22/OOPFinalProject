@@ -13,7 +13,7 @@ class TicketRepository:
   def find_by_id(self, ticket_id: str) -> Optional[Ticket]:
     return self.tickets.get(ticket_id)
 
-  def find_by_org(self, filters: Optional[Dict[str, Any]] = None) -> List[Ticket]:
+  def find_by_filters(self, filters: Optional[Dict[str, Any]] = None) -> List[Ticket]:
     filtered_tickets = [
       t for t in self.tickets.values() 
     ]
