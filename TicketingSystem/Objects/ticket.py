@@ -7,7 +7,7 @@ from .user import User
 class Ticket:
   def __init__(
     self,
-    ticketId: str,
+    ticketId: int,
     title: str,
     description: str,
     status: Status,
@@ -50,7 +50,6 @@ class Ticket:
     "created_at": self.created_at.isoformat(),
     "updated_at": self.updated_at.isoformat(),
     "is_open": self.is_open,
-    "org_id": self.org_id,
-    "assignee_id": self.assignee_id
+    "assigned_to": self.assigned_to
     }
     
