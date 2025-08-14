@@ -14,10 +14,6 @@ class TicketRepository:
     return self.tickets.get(ticket_id)
 
   def find_by_filters(self, filters: Optional[Dict[str, Any]] = None) -> List[Ticket]:
-    filtered_tickets = [
-      t for t in self.tickets.values() 
-    ]
-        
     if filters:
       if 'status' in filters:
         status = Status(filters['status']) if isinstance(filters['status'], str) else filters['status']
