@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TicketList = ({ tickets, onTicketClick, onCreateTicket }) => {
+const TicketList = ({ tickets, onTicketClick, onCreateTicket, onEditTicket }) => {
   const getPriorityClass = (priority) => {
     switch (priority.toLowerCase()) {
       case 'low':
@@ -18,6 +18,11 @@ const TicketList = ({ tickets, onTicketClick, onCreateTicket }) => {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const handleEditClick = (e, ticket) => {
+    e.stopPropagation(); // Prevent opening the detail modal
+    onEditTicket(ticket);
   };
 
   return (
@@ -46,10 +51,17 @@ const TicketList = ({ tickets, onTicketClick, onCreateTicket }) => {
             <div className="ticket-assigned">
               {ticket.assigned_to ? ticket.assigned_to.name : 'Unassigned'}
             </div>
-            <div>
+            <div className="ticket-actions">
               <span className={`priority-badge ${getPriorityClass(ticket.priority)}`}>
                 {ticket.priority}
               </span>
+              <button 
+                className="btn-edit"
+                onClick={(e) => handleEditClick(e, ticket)}
+                title="Edit ticket"
+              >
+                ✏️ Edit
+              </button>
             </div>
           </div>
         ))

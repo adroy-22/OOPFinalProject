@@ -121,6 +121,37 @@ code {
   color: #6c757d;
 }
 
+.ticket-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.btn-edit {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-edit:hover {
+  background: #138496;
+  transform: translateY(-1px);
+}
+
+.btn-edit:active {
+  transform: translateY(0);
+}
+
 .priority-badge {
   padding: 4px 12px;
   border-radius: 20px;
@@ -240,6 +271,11 @@ code {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input.error,
+.form-group textarea.error {
+  border-color: #dc3545;
 }
 
 .form-group textarea {

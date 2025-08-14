@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import TicketList from './components/TicketList';
 import TicketModal from './components/TicketModal';
 import CreateTicketModal from './components/CreateTicketModal';
+import EditTicketModal from './components/EditTicketModal';
 import './App.css';
 
 function App() {
   const [tickets, setTickets] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTicket, setEditingTicket] = useState(null);
   const [nextTicketId, setNextTicketId] = useState(1);
 
   // Sample data to populate the tickets
@@ -92,6 +94,23 @@ function App() {
     setShowCreateModal(false);
   };
 
+  const handleEditTicket = (ticket) => {
+    setEditingTicket(ticket);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingTicket(null);
+  };
+
+  const handleSaveTicket = (updatedTicket) => {
+    setTickets(prevTickets => 
+      prevTickets.map(ticket => 
+        ticket.ticket_id === updatedTicket.ticket_id ? updatedTicket : ticket
+      )
+    );
+    setEditingTicket(null);
+  };
+
   return (
     <div className="App">
       <div className="header">
@@ -106,6 +125,7 @@ function App() {
           tickets={tickets} 
           onTicketClick={handleTicketClick}
           onCreateTicket={() => setShowCreateModal(true)}
+          onEditTicket={handleEditTicket}
         />
 
         {selectedTicket && (
@@ -119,6 +139,14 @@ function App() {
           <CreateTicketModal 
             onClose={handleCloseCreateModal}
             onCreateTicket={handleCreateTicket}
+          />
+        )}
+
+        {editingTicket && (
+          <EditTicketModal 
+            ticket={editingTicket}
+            onClose={handleCloseEditModal}
+            onSaveTicket={handleSaveTicket}
           />
         )}
       </div>
