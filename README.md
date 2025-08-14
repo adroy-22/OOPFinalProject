@@ -1,6 +1,7 @@
 # Ticketing System - JavaScript OOP Implementation
 
-A comprehensive ticketing system built entirely in **JavaScript using Object-Oriented Programming principles**. This system demonstrates advanced OOP concepts including **encapsulation**, **inheritance**, **polymorphism**, **abstraction**, **composition**, and **single responsibility**.
+A comprehensive ticketing system built entirely in **JavaScript**. We built an application that allows users of an organization to keep track of tickets that come up when developing a software application. As small bugs or feature additions crop up, it is important to keep track of them in a centralized place, rank them by priority, and finally assign them to team members to ensure all bases are covered. The impact of this is it’ll help smaller-more agile teams ship faster and ensure code-quality. 
+
 
 ## 📁 **Project Structure**
 
